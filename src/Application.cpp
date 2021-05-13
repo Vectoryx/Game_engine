@@ -26,10 +26,52 @@
 //#define FULLSCREEN
 
 #define SCREEN_WIDTH 800
-#define SCREEN_HEIGTH 800
+#define SCREEN_HEIGHT 800
+
+float	  translation = 100;
+glm::mat4 proj;
+glm::mat4 MVP;
+glm::mat4 view;
+glm::mat4 model;
+
+void print_matrix(glm::mat4 matrix) {
+
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			printf("% 4.2f ", matrix[i][j]);
+		}
+		std::cout << std::endl;
+	}
+}
+
+void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+	if (action == GLFW_PRESS) {
+		if (key == GLFW_KEY_RIGHT) {
+			translation -= 10;
+		} else if (key == GLFW_KEY_LEFT) {
+			translation += 10;
+		}
+		view = glm::translate(glm::mat4(1.0f), glm::vec3(-translation, 0, 0));
+		MVP = proj * view;
+		// print_matrix(MVP);
+	}
+}
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 	glViewport(0, 0, width, height);
+	proj = glm::ortho(0.0f, float(width), float(height), 0.0f, -1.0f, 1.0f);
+
+	std::cout << width << " : " << height << std::endl;
+
+	print_matrix(proj);
+
+	std::cout << std::endl;
+
+	glm::vec4 temp(300.0f, 300.0f, 0.0f, 1.0f);
+	glm::vec4 res = temp * proj;
+	for (int i = 0; i < 4; i++) {
+		printf("%5.08f\n", res[i]);
+	}
 }
 
 int main(void) {
@@ -43,9 +85,11 @@ int main(void) {
 	GLFWmonitor *monitor = glfwGetPrimaryMonitor();
 	window = glfwCreateWindow(1920, 1080, "WOOOO HOOOO", monitor, NULL);
 #else
-	window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGTH, "WOOOO HOOOO", NULL, NULL);
+	window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "WOOOO HOOOO", NULL, NULL);
 #endif
+
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetKeyCallback(window, key_callback);
 
 	if (!window) {
 		glfwTerminate();
@@ -92,29 +136,18 @@ int main(void) {
 		unsigned int tr_i[6] = {0, 1, 2, 2, 3, 0};
 		IndexBuffer	 ib(tr_i, 6);
 
-		glm::mat4 proj = glm::ortho(0.0f, float(SCREEN_WIDTH), float(SCREEN_HEIGTH), 0.0f, -1.0f, 1.0f);
-		/*
-		for (int i = 0; i < 4; i++) {
-			for (int j = 0; j < 4; j++) {
-				printf("% 5.8f ", proj[i][j]);
-			}
-			std::cout << std::endl;
-		}
-		std::cout << std::endl;
+		proj = glm::ortho(0.0f, float(SCREEN_WIDTH), float(SCREEN_HEIGHT), 0.0f, -1.0f, 1.0f);
+		view = glm::translate(glm::mat4(1.0f), glm::vec3(-100, 0, 0));
 
-		glm::vec4 temp(300.0f, 300.0f, 0.0f, 1.0f);
-		glm::vec4 res = temp * proj;
-		for (int i = 0; i < 4; i++) {
-			printf("%5.08f\n", res[i]);
-		}*/
+		MVP = proj * view;
 
 		Shader shade;
 		shade.addShader("res/shaders/basic.frag", GL_FRAGMENT_SHADER);
 		shade.addShader("res/shaders/basic.vert", GL_VERTEX_SHADER);
 
 		Renderer::BindShaderProgram(shade);
-		shade.SetUniformMat4f("u_MVP", proj); // use the projection matrix
-		shade.SetUniform1i("u_Texture", 0);	  // use the texture;
+		shade.SetUniformMat4f("u_MVP", MVP); // use the projection matrix
+		shade.SetUniform1i("u_Texture", 0);	 // use the texture;
 
 		Texture texture("res/textures/this_is_snake.jpg");
 
@@ -132,6 +165,7 @@ int main(void) {
 			renderer.Clear();
 
 			Renderer::BindShaderProgram(shade);
+			shade.SetUniformMat4f("u_MVP", MVP); // use the projection matrix
 
 			Renderer::BindVertexArray(va);
 			Renderer::BindIndexBuffer(ib);
