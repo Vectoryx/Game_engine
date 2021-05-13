@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <stdio.h>
 #include <string>
 
 #include "Debugging.h"
@@ -24,6 +25,9 @@
 
 //#define FULLSCREEN
 
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGTH 800
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 	glViewport(0, 0, width, height);
 }
@@ -39,7 +43,7 @@ int main(void) {
 	GLFWmonitor *monitor = glfwGetPrimaryMonitor();
 	window = glfwCreateWindow(1920, 1080, "WOOOO HOOOO", monitor, NULL);
 #else
-	window = glfwCreateWindow(800, 800, "WOOOO HOOOO", NULL, NULL);
+	window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGTH, "WOOOO HOOOO", NULL, NULL);
 #endif
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
@@ -62,11 +66,11 @@ int main(void) {
 	{
 		float pos[] = {
 			// vertex x, vertx y, textcoor x, textcoor y
-			-1.0f, -1.0f, 0.0f, 0.0f, // 0 down left
-			1.0f, -1.0f, 1.0f, 0.0f,  // 1 down right
-			1.0f, 1.0f, 1.0f, 1.0f,	  // 2 up left
-			-1.0f, 1.0f, 0.0f, 1.0f,  // 3 up right
-			0.0f, 0.0f, 0.5f, 0.5f	  // 4 center
+			100.0f, 300.0f, 0.0f, 0.0f, // 0 down left
+			300.0f, 300.0f, 1.0f, 0.0f, // 1 down right
+			300.0f, 100.0f, 1.0f, 1.0f, // 2 up right
+			100.0f, 100.0f, 0.0f, 1.0f, // 3 up left
+			0.0f, 0.0f, 0.5f, 0.5f		// 4 center
 		};
 
 		Renderer renderer;
@@ -88,7 +92,21 @@ int main(void) {
 		unsigned int tr_i[6] = {0, 1, 2, 2, 3, 0};
 		IndexBuffer	 ib(tr_i, 6);
 
-		glm::mat4 proj = glm::ortho(-2.0f, 2.0f, -1.5f, 1.5f, -1.0f, 1.0f);
+		glm::mat4 proj = glm::ortho(0.0f, float(SCREEN_WIDTH), float(SCREEN_HEIGTH), 0.0f, -1.0f, 1.0f);
+		/*
+		for (int i = 0; i < 4; i++) {
+			for (int j = 0; j < 4; j++) {
+				printf("% 5.8f ", proj[i][j]);
+			}
+			std::cout << std::endl;
+		}
+		std::cout << std::endl;
+
+		glm::vec4 temp(300.0f, 300.0f, 0.0f, 1.0f);
+		glm::vec4 res = temp * proj;
+		for (int i = 0; i < 4; i++) {
+			printf("%5.08f\n", res[i]);
+		}*/
 
 		Shader shade;
 		shade.addShader("res/shaders/basic.frag", GL_FRAGMENT_SHADER);
