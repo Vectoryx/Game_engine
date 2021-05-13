@@ -28,7 +28,7 @@
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 800
 
-float	  translation = 100;
+glm::vec2 translation(0, 0);
 glm::mat4 proj;
 glm::mat4 MVP;
 glm::mat4 view;
@@ -45,13 +45,18 @@ void print_matrix(glm::mat4 matrix) {
 }
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-	if (action == GLFW_PRESS) {
+	if (action == GLFW_REPEAT) {
 		if (key == GLFW_KEY_RIGHT) {
-			translation -= 10;
+			translation.x -= 5;
 		} else if (key == GLFW_KEY_LEFT) {
-			translation += 10;
+			translation.x += 5;
 		}
-		view = glm::translate(glm::mat4(1.0f), glm::vec3(-translation, 0, 0));
+		if (key == GLFW_KEY_UP) {
+			translation.y -= 5;
+		} else if (key == GLFW_KEY_DOWN) {
+			translation.y += 5;
+		}
+		view = glm::translate(glm::mat4(1.0f), glm::vec3(-translation.x, translation.y, 0));
 		MVP = proj * view;
 		// print_matrix(MVP);
 	}
@@ -98,7 +103,7 @@ int main(void) {
 
 	// Make the window's context current
 	glfwMakeContextCurrent(window);
-	glfwSwapInterval(10);
+	glfwSwapInterval(1);
 
 	if (glewInit() != GLEW_OK) {
 		std::cout << "Error calling Glewinit";
@@ -137,7 +142,7 @@ int main(void) {
 		IndexBuffer	 ib(tr_i, 6);
 
 		proj = glm::ortho(0.0f, float(SCREEN_WIDTH), float(SCREEN_HEIGHT), 0.0f, -1.0f, 1.0f);
-		view = glm::translate(glm::mat4(1.0f), glm::vec3(-100, 0, 0));
+		view = glm::translate(glm::mat4(1.0f), glm::vec3(translation.x, translation.y, 0));
 
 		MVP = proj * view;
 
