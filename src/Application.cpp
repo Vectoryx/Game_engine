@@ -28,61 +28,133 @@
 float screen_width	= 1000;
 float screen_height = 1000;
 
-void print_matrix4(glm::mat4);
-void rotateModel(glm::vec3 amountDeg);
-void translateModel(glm::vec3 amout);
+void printMat4(glm::mat4 mat);
+void rotateMat4(glm::mat4 &matrix, glm::vec3 amountDeg);
+void translateMat4(glm::mat4 &matrix, glm::vec3 amout);
 
-glm::vec3 translation(0.0f, 0.0f, 0.0f);
-glm::vec3 rotation(0.0f, 0.0f, 0.0f);
+void moveCamera(glm::vec3 offset);
+void updateDTime();
+void updateMoveVectors();
+void updatePerspective();
+
+// MVP rojections
 glm::mat4 proj(1.0f);
-glm::mat4 MVP(1.0f);
 glm::mat4 view(1.0f);
 glm::mat4 model(1.0f);
+glm::mat4 MVP(1.0f);
 
+// camera vectors
+glm::vec3 cameraPos(2.0f, 0.0f, 2.0f);		 // absolute position of the camera
+glm::vec3 cameraRight(1.0f, 0.0f, 0.0f);	 // the right direction
+glm::vec3 cameraUp(0.0f, 1.0f, 0.0f);		 // the up direction of the camera
+glm::vec3 cameraFront(0.0f, 0.0f, 1.0f);	 // also the direction foreward
+glm::vec3 cameraWatching(0.0f, 0.0f, -1.0f); // where the camera is watching relative to itself
+glm::vec3 up(0.0f, 1.0f, 0.0f);
+
+// vars
+float		yaw				 = -90.0f; // rotation along the y axys
+float		pitch			 = 0.0f;   // rotation aling the x axys
+float		FOV				 = 45.0f;  // Fiel of view 1 -> 90
+float		cameraSpeed		 = 0.0f;   // camera movement speed
+const float cameraSpeedConst = 2.0f;   // camera movement base speed
+float		deltaTime		 = 0.0f;   // time elapsed since last frame
+float		lastFrameTime	 = 0.0f;   // last absolute frametime
+
+glm::vec2 mouse(-1.0f, -1.0f);
+
+// move camera left / right and foreward / backward
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+
+	glm::vec3 translation(0.0f, 0.0f, 0.0f);
+	glm::vec3 rotation(0.0f, 0.0f, 0.0f);
 
 	model = glm::mat4(1.0f);
 
 	if (action == GLFW_REPEAT || action == GLFW_PRESS) {
-		if (key == GLFW_KEY_RIGHT) {
-			translation.x -= 0.1;
-		} else if (key == GLFW_KEY_LEFT) {
-			translation.x += 0.1;
-		}
 
-		if (key == GLFW_KEY_UP) {
-			translation.y -= 0.1;
-		} else if (key == GLFW_KEY_DOWN) {
-			translation.y += 0.1;
+		// camera controls
+		if (key == GLFW_KEY_A) {
+			translation += cameraRight * cameraSpeed;
+		} else if (key == GLFW_KEY_D) {
+			translation += cameraRight * -cameraSpeed;
 		}
-
-		translateModel(translation);
 
 		if (key == GLFW_KEY_W) {
-			rotation.x -= 1.0f;
+			translation += cameraFront * cameraSpeed;
 		} else if (key == GLFW_KEY_S) {
+			translation += cameraFront * -cameraSpeed;
+		}
+
+		if (key == GLFW_KEY_C) {
+			FOV = glm::clamp(FOV - 1.0f, 10.0f, 110.0f);
+			updatePerspective();
+		} else if (key == GLFW_KEY_X) {
+			FOV = glm::clamp(FOV + 1.0f, 10.0f, 110.0f);
+			updatePerspective();
+		}
+
+		moveCamera(translation);
+
+		// rotation control
+		if (key == GLFW_KEY_UP) {
+			rotation.x -= 1.0f;
+		} else if (key == GLFW_KEY_DOWN) {
 			rotation.x += 1.0f;
 		}
 
-		if (key == GLFW_KEY_A) {
+		if (key == GLFW_KEY_LEFT) {
 			rotation.y -= 1.0f;
-		} else if (key == GLFW_KEY_D) {
+		} else if (key == GLFW_KEY_RIGHT) {
 			rotation.y += 1.0f;
 		}
 
-		if (key == GLFW_KEY_R) {
+		if (key == GLFW_KEY_PERIOD) {
 			rotation.z -= 1.0f;
-		} else if (key == GLFW_KEY_E) {
+		} else if (key == GLFW_KEY_COMMA) {
 			rotation.z += 1.0f;
 		}
-		rotateModel(rotation);
+		//rotateMat4(model, rotation);
 
-		MVP = proj * view * model;
+		if (key == GLFW_KEY_ESCAPE) {
+			glfwTerminate();
+			exit(0);
+		}
 	}
 }
 
+// recalculate the perspective matrix from the new screen size and update the drawing "canvas"
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 	glViewport(0, 0, width, height);
+	screen_height = height;
+	screen_width  = width;
+	proj		  = glm::perspective(glm::radians(FOV), float(screen_width / screen_height), 0.1f, 100.0f);
+}
+
+// make the camera look to the mouse
+void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
+
+	if (mouse == glm::vec2(-1.0f, -1.0f)) {
+		mouse.x = xpos;
+		mouse.y = ypos;
+	}
+
+	float sensitivity = 0.1f;
+
+	pitch += (mouse.y - ypos) * sensitivity;
+	yaw += (xpos - mouse.x) * sensitivity;
+
+	glm::clamp(pitch, -90.0f, 90.0f);
+
+	cameraWatching.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	cameraWatching.y = sin(glm::radians(pitch));
+	cameraWatching.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	cameraWatching, cameraFront = glm::normalize(cameraWatching);
+
+	mouse = glm::vec2(xpos, ypos);
+
+	view		  = glm::lookAt(cameraPos, cameraPos + cameraWatching, glm::vec3(0.0f, 1.0f, 0.0f));
+	cameraFront.y = 0.0f;
+	cameraRight = glm::cross(cameraFront, cameraUp);
 }
 
 int main(void) {
@@ -101,6 +173,8 @@ int main(void) {
 
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetKeyCallback(window, key_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// Make the window's context current
 	glfwMakeContextCurrent(window);
@@ -125,22 +199,6 @@ int main(void) {
 	GLCall(glEnable(GL_DEPTH_TEST));
 
 	{
-
-		/* 
-		float pos[] = {
-			// vertex x, vertx y, textcoor x, textcoor y
-			0.0, 20.0f, 0.0f, 0.0f,	  // 0 left down
-			20.0f, 20.0f, 1.0f, 0.0f, // 1 right down
-			20.0f, 0.0f, 1.0f, 1.0f,  // 2 right up
-			0.0f, 0.0f, 0.0f, 1.0f,	  // 3 left up
-		}; */
-		/*
-		float pos[]{
-			-0.5f, -0.5f, 0.0f, 0.0f, // 0 left down
-			0.5f, -0.5f, 1.0f, 0.0f,  // 1 right down
-			0.5f, 0.5f, 1.0f, 1.0f,	  // 2 right up
-			-0.5f, 0.5f, 0.0f, 1.0f	  // 3 left up
-		};*/
 
 		float pos[] = {
 			-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // 0 left down
@@ -196,19 +254,16 @@ int main(void) {
 		};
 		IndexBuffer ib(tr_i, 36);
 
-		proj = glm::perspective(glm::radians(55.0f), float(screen_width / screen_height), 0.1f, 100.0f);
+		proj = glm::perspective(glm::radians(FOV), float(screen_width / screen_height), 0.1f, 100.0f);
 
-		view = glm::lookAt(glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-
-		MVP = proj * view * model;
+		moveCamera(glm::vec3(0.0f, 0.5f, 0.0f));
 
 		Shader shade;
 		shade.addShader("res/shaders/basic.frag", GL_FRAGMENT_SHADER);
 		shade.addShader("res/shaders/basic.vert", GL_VERTEX_SHADER);
 
 		Renderer::BindShaderProgram(shade);
-		shade.SetUniformMat4f("u_MVP", MVP); // use the projection matrix
-		shade.SetUniform1i("u_Texture", 0);	 // use the texture;
+		shade.SetUniform1i("u_Texture", 0); // use the texture;
 
 		Texture texture("res/textures/this_is_snake.jpg");
 
@@ -216,20 +271,23 @@ int main(void) {
 		Renderer::UnBindVertexBuffer();
 		Renderer::UnBindIndexBuffer();
 		Renderer::UnBindShaderProgram();
+
 		Renderer::BindTexture(texture, 0);
+		Renderer::BindVertexArray(va);
+		Renderer::BindIndexBuffer(ib);
 
 		// Main game loop
 		// Loop until the user closes the window
 		while (!glfwWindowShouldClose(window)) {
 
+			updateDTime();
+
 			// Render here
 			renderer.Clear();
 
 			Renderer::BindShaderProgram(shade);
+			MVP = proj * view * model;
 			shade.SetUniformMat4f("u_MVP", MVP); // use the projection matrix
-
-			Renderer::BindVertexArray(va);
-			Renderer::BindIndexBuffer(ib);
 
 			renderer.Draw(va, ib, shade);
 
@@ -247,7 +305,7 @@ int main(void) {
 }
 
 // for debug, print the matrix on console
-void print_matrix4(glm::mat4 matrix) {
+void printMat4(glm::mat4 matrix) {
 
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
@@ -257,33 +315,32 @@ void print_matrix4(glm::mat4 matrix) {
 	}
 }
 
-void translateModel(glm::vec3 amount) {
-	model = glm::translate(model, glm::vec3(amount.x, amount.y, amount.z));
+void translateMat4(glm::mat4 &matrix, glm::vec3 amount) {
+	matrix = glm::translate(matrix, glm::vec3(amount.x, amount.y, amount.z));
 }
 
-void rotateModel(glm::vec3 amountDeg) {
-	model = glm::rotate(model, glm::radians(amountDeg.x), glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(amountDeg.y), glm::vec3(0.0f, 1.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(amountDeg.z), glm::vec3(0.0f, 0.0f, 1.0f));
+void rotateMat4(glm::mat4 &matrix, glm::vec3 amountDeg) {
+	matrix = glm::rotate(matrix, glm::radians(amountDeg.x), glm::vec3(1.0f, 0.0f, 0.0f));
+	matrix = glm::rotate(matrix, glm::radians(amountDeg.y), glm::vec3(0.0f, 1.0f, 0.0f));
+	matrix = glm::rotate(matrix, glm::radians(amountDeg.z), glm::vec3(0.0f, 0.0f, 1.0f));
 }
 
-//          1.0
-//           │
-//           │
-//-1.0 ──────┼──────1.0
-//           │
-//           │
-//         -1.0
-//
-//      │
-//      V
-//proj = glm::ortho(0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f); // set the drawing screen from top left
+void moveCamera(glm::vec3 offset) {
 
-//      │
-// 0.0  V
-//  ┌──────1.0
-//  │
-//  │
-// 1.0
+	cameraPos += offset;
+	//												the Up is the y axys
+	view = glm::lookAt(cameraPos, cameraPos + cameraWatching, glm::vec3(0.0f, 1.0f, 0.0f));
+}
 
-//proj = glm::perspective(glm::radians(45.0f), float(SCREEN_WIDTH / SCREEN_HEIGHT), 0.1f, 100.0f);
+void updateDTime() {
+
+	// framerate dependent way of measuring time
+	float currentFrame = glfwGetTime();
+	deltaTime		   = currentFrame - lastFrameTime;
+	lastFrameTime	   = currentFrame;
+	cameraSpeed		   = cameraSpeedConst * deltaTime;
+}
+
+void updatePerspective() {
+	proj = glm::perspective(glm::radians(FOV), float(screen_width / screen_height), 0.1f, 100.0f);
+}
