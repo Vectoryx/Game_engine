@@ -1,14 +1,15 @@
+#include "Debugging.hpp"
 #include "GL/glew.h"
-#include "Debugging.h"
 #include <iostream>
 
+// clear any remaining error
 void GLClearError() {
 
 	while (glGetError() != GL_NO_ERROR) {
-
 	}
 }
 
+// print the error if happened
 bool GLLogCall(const char *function, const char *file, int line) {
 	GLenum e;
 	while (e = glGetError()) {

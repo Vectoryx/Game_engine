@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Debugging.h"
+#include "Debugging.hpp"
 #include <GL/glew.h>
 #include <vector>
 
@@ -38,28 +38,8 @@ public:
 	void Push(unsigned int count, unsigned int size_type) {
 		m_Elements.push_back({size_type, count, GL_FALSE});
 		m_Stride += count * VertexAttribute::GetSizeOfType(size_type);
-		//static_assert(false);
-	}
-	/*
-	template<>
-	void Push<float>(unsigned int count) {
-		m_Elements.push_back({GL_FLOAT, count, GL_FALSE});
-		m_Stride += count * VertexAttribute::GetSizeOfType(GL_FLOAT);
 	}
 
-	template<>
-	void Push<unsigned int>(unsigned int count) {
-		m_Elements.push_back({GL_UNSIGNED_INT, count, GL_FALSE});
-		m_Stride += count * VertexAttribute::GetSizeOfType(GL_UNSIGNED_INT);
-
-	}
-
-	template<>
-	void Push<unsigned char>(unsigned int count) {
-		m_Elements.push_back({GL_UNSIGNED_BYTE, count, GL_TRUE});
-		m_Stride += count * VertexAttribute::GetSizeOfType(GL_UNSIGNED_BYTE);
-	}
-*/
 	inline const std::vector<VertexAttribute> GetElements() const {
 		return m_Elements;
 	}

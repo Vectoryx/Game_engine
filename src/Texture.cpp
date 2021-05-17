@@ -1,16 +1,21 @@
-#include "Texture.h"
-#include "Debugging.h"
+#include "Texture.hpp"
+#include "Debugging.hpp"
 #include "stb_image.h"
 
-Texture::Texture(const std::string& path)
-	:m_RendererID(0), m_FilePath(path), m_LocalBuffer(nullptr),
-	m_Height(0), m_Width(0), m_BPP(0) {
+// load a texture to the GPU
+Texture::Texture(const std::string &path)
+	: m_RendererID(0), m_FilePath(path), m_LocalBuffer(nullptr),
+	  m_Height(0), m_Width(0), m_BPP(0) {
+	
+	// openGL reads images from down to top, so we load the image flipped
 	stbi_set_flip_vertically_on_load(1);
 	m_LocalBuffer = stbi_load(path.c_str(), &m_Width, &m_Height, &m_BPP, 4);
 
+	// generate the texture and specify the type
 	GLCall(glGenTextures(1, &m_RendererID));
 	GLCall(glBindTexture(GL_TEXTURE_2D, m_RendererID));
 
+	// Todo: don't really know what is doing
 	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
 	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
