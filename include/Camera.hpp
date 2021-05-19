@@ -22,6 +22,7 @@ public:
 	glm::mat4 point(int posx, int posy);
 	void	  zoom(float diff_FOV);
 	glm::vec3 getFrontSpeed();
+	glm::vec3 getUpSpeed();
 	glm::vec3 getRightSpeed();
 	glm::mat4 getPerspective(int width, int height);
 };

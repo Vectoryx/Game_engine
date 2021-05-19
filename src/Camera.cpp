@@ -49,6 +49,9 @@ glm::vec3 Camera::getFrontSpeed() {
 	return m_cameraFront * m_cameraSpeedConst;
 }
 
+glm::vec3 Camera::getUpSpeed() {
+	return m_cameraUp * m_cameraSpeedConst;
+}
 glm::vec3 Camera::getRightSpeed() {
 	return m_cameraRight * m_cameraSpeedConst;
 }
