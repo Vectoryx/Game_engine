@@ -1,5 +1,6 @@
 #include "renderer.hpp"
 #include "Debugging.hpp"
+#include "profiler.hpp"
 #include <iostream>
 
 void Renderer::Clear() const {
@@ -7,6 +8,7 @@ void Renderer::Clear() const {
 }
 
 void Renderer::Draw(const VertexArray &va, const IndexBuffer &ib, const Shader &shader) {
+	PROFILE_FUNCTION();
 	GLCall(glDrawElements(GL_TRIANGLES, ib.GetCount(), GL_UNSIGNED_INT, nullptr));
 }
 
