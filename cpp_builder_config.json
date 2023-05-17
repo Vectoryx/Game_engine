@@ -1,9 +1,15 @@
 {
-	"projectDir": ".",
-	"exeName": "Game.bin",
-	"compilerExe": "g++",
-	"linkerExe": "g++",
-	"Directories": {
+	"scripts": {
+	},
+	"compiler" : {
+		"compiler_style" : "gcc",
+		"compiler_exe": "g++",
+		"linker_exe": "g++"
+	},
+
+	"directories": {
+		"project_dir": ".",
+		"exe_path_name": "bin/Game.bin",
 		"includeDir": [
 			"include",
 			"ext"
@@ -11,23 +17,15 @@
 		"sourceDir": [
 			"src"
 		],
-		"libraryDir": [
-			"ext/glew/lib",
-			"ext/glfw/lib"
-		],
-		"objectsDir": "objs",
-		"exeDir": "bin"
+		"temp_dir": "obj"
 	},
-	"libraries": {
-		"Debug": [
-			"GLEW",
-			"glfw3",
-			"pthread",
-			"dl",
-			"GL",
-			"X11"
+
+	"debug": {
+		"compiler_args": "-g3 -std=c++2a -Wno-missing-field-initializers -Wconversion -Wshadow -Wextra -Wpedantic -fsanitize=address -fsanitize=pointer-compare -fsanitize=pointer-subtract -fsanitize=leak",
+		"linker_args": "-fsanitize=address -fsanitize=pointer-compare -fsanitize=pointer-subtract -fsanitize=leak",
+		"libraries_dirs" : [
 		],
-		"Release": [
+		"libraries_names": [
 			"GLEW",
 			"glfw3",
 			"pthread",
@@ -36,14 +34,12 @@
 			"X11"
 		]
 	},
-	"Arguments": {
-		"Debug": {
-			"Compiler": "-g3 -std=c++2a -Wno-missing-field-initializers -Wconversion -Wshadow -Wextra -Wpedantic -fsanitize=address -fsanitize=pointer-compare -fsanitize=pointer-subtract -fsanitize=leak",
-			"Linker": "-fsanitize=address -fsanitize=pointer-compare -fsanitize=pointer-subtract -fsanitize=leak"
-		},
-		"Release": {
-			"Compiler": "-02 -std=c++2a -Wno-missing-field-initializers -Wconversion -Wshadow -Wextra -Wpedantic",
-			"Release": "-s"
-		}
+	"release": {
+		"compiler_args": "-02 -std=c++2a -Wno-missing-field-initializers -Wconversion -Wshadow -Wextra -Wpedantic",
+		"linker_args": "-s",
+		"libraries_dirs" : [
+		],
+		"libraries_names" : [
+		]
 	}
 }
