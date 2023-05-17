@@ -16,7 +16,7 @@ Texture::Texture(const std::string &path)
 	GLCall(glBindTexture(GL_TEXTURE_2D, m_RendererID));
 
 	// texture filtering for upscaling and downscaling, linear interpolate, nearest does not
-	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR));
 	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
 
 	// texture wrapping for x y axys set to repeating last row of pixel until edge
@@ -24,6 +24,7 @@ Texture::Texture(const std::string &path)
 	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
 
 	GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_LocalBuffer));
+	glGenerateMipmap(GL_TEXTURE_2D);
 	GLCall(glBindTexture(GL_TEXTURE_2D, 0));
 
 	if (m_LocalBuffer) {

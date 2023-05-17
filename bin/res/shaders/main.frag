@@ -1,4 +1,4 @@
-#version 450 core
+/*#version 450 core
 
 layout(location = 0) out vec4 color;
 
@@ -36,4 +36,59 @@ void main() {
 
 	// combine vertex color, texture color, and lightning
 	color = v_color * texColor * vec4(ambient + diffuse + specular, 1.0);
-};
+};*/
+#version 450 core
+
+layout(location = 0) in vec2 v_TexCoord;
+layout(location = 1) in vec3 f_position;
+layout(location = 2) in vec3 v_normal;
+
+struct DirLight {
+    vec3 direction;
+  
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};  
+
+uniform DirLight dirLight;
+
+vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
+
+struct Material {
+    float shininess;
+}; 
+  
+uniform Material material;
+uniform sampler2D texture0;
+uniform vec3 viewPos;
+
+out vec4 FragColor;
+
+void main()
+{
+    // properties
+    vec3 norm = normalize(v_normal);
+    vec3 viewDir = normalize(viewPos - f_position);
+
+    // phase 1: Directional lighting
+    vec3 result = CalcDirLight(dirLight, norm, viewDir);
+    // phase 2: Point lights
+    
+    FragColor = texture(texture0, v_TexCoord) * vec4(result, 1.0);
+}
+
+vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
+{
+    vec3 lightDir = normalize(-light.direction);
+    // diffuse shading
+    float diff = max(dot(normal, lightDir), 0.0);
+    // specular shading
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = (max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    // combine results
+    vec3 ambient  = light.ambient  * vec3(texture(texture0, v_TexCoord));
+    vec3 diffuse  = light.diffuse  * diff * vec3(texture(texture0, v_TexCoord));
+    vec3 specular = light.specular * spec * vec3(1.0f, 0.0f, 0.0f);
+    return (ambient + diffuse + specular);
+} 

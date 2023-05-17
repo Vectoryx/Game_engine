@@ -76,8 +76,8 @@ void Renderer::DrawTris(Vertex &v1, Vertex &v2, Vertex &v3) {
 
 void Renderer::DrawQuad(Vertex &v1, Vertex &v2, Vertex &v3, Vertex &v4) {
 
-	if (Current_batch.indexCount + 4 > MAX_VERTEX_COUNT) {
-		Logger::Log(Logger::Warning, "Max vertex count exceeded, committing drawing call");
+	if (Current_batch.indexCount + 6 > MAX_VERTEX_COUNT) {
+		//Logger::Log(Logger::Info, "Max vertex count exceeded, committing drawing call");
 		Commit();
 	}
 

@@ -1,17 +1,6 @@
 /**
-* Docs: https://docs.gl
-*/
-
-#include "glew/include/GL/glew.h"
-#include "glfw/include/GLFW/glfw3.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <stdio.h>
-#include <string>
+ * Docs: https://docs.gl
+ */
 
 #include "Camera.hpp"
 #include "Debugging.hpp"
@@ -19,20 +8,30 @@
 #include "Renderer.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
+#include "glew/include/GL/glew.h"
+#include "glfw/include/GLFW/glfw3.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 #include "profiler.hpp"
 
-//#define FULLSCREEN
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <stdio.h>
+#include <string>
+
+// #define FULLSCREEN
 
 // function declaration
 GLFWwindow *setup();
-void		rotateMat4(glm::mat4 &matrix, glm::vec3 amountDeg);
-void		translateMat4(glm::mat4 &matrix, glm::vec3 amout);
-void		debugMessage(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam);
-glm::vec3	calcNormal(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3);
-void		updateDTime();
-bool		intersect_triangle(glm::vec3 Raydir, glm::vec3 Rayorg, glm::vec3 A, glm::vec3 B, glm::vec3 C, glm::vec3 &res); // calculate the intersect point to any tris
-glm::vec3	checkMouseRay(Vertex *vertexes, unsigned int *indexes, unsigned int count);									   // return the intersection point to any geometry closest to the camera
-void		get_block_raycast(glm::vec3 rayorg, glm::vec3 raydir, glm::vec3 &res);										   // find the block watched by the camera
+void        rotateMat4(glm::mat4 &matrix, glm::vec3 amountDeg);
+void        translateMat4(glm::mat4 &matrix, glm::vec3 amout);
+void        debugMessage(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam);
+glm::vec3   calcNormal(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3);
+void        updateDTime();
+bool        intersect_triangle(glm::vec3 Raydir, glm::vec3 Rayorg, glm::vec3 A, glm::vec3 B, glm::vec3 C, glm::vec3 &res); // calculate the intersect point to any tris
+glm::vec3   checkMouseRay(Vertex *vertexes, unsigned int *indexes, unsigned int count);                                    // return the intersection point to any geometry closest to the camera
+void        get_block_raycast(glm::vec3 rayorg, glm::vec3 raydir, glm::vec3 &res);                                         // find the block watched by the camera
 
 // input handling
 void processKeyboard();
@@ -45,10 +44,10 @@ void addCube(Vertex *cube, Renderer &renderer);
 void shift(Vertex *verticies, glm::vec3 offset, int count);
 
 // globals
-float screen_width	= 1000;
+float screen_width  = 1000;
 float screen_height = 1000;
-bool  _Close		= false;
-int	  keys[GLFW_KEY_LAST];
+bool  _Close        = false;
+int   keys[GLFW_KEY_LAST];
 char  keyMod = 0x00000000b; // 0 / 0 / num lock / caps lock / super / alt / control / shift /
 
 // MVP rojections
@@ -61,8 +60,8 @@ glm::mat4 MVP(1.0f);
 Camera camera(glm::vec3(5.0f, 5.5f, 2.0f));
 
 // variable for calculating cameraposition and speed
-float	  deltaTime		= 0.0f; // time elapsed since last frame
-float	  lastFrameTime = 0.0f; // last absolute frametime
+float     deltaTime     = 0.0f; // time elapsed since last frame
+float     lastFrameTime = 0.0f; // last absolute frametime
 glm::vec2 mouse(-1.0f, -1.0f);
 
 // lightning
@@ -71,44 +70,42 @@ glm::vec3 ligthPos(2.0f, 2.0f, 2.0f);
 
 // vertexes buffer and index buffer
 
-bool chunk[10][10]; // true: a block is present, false: a block is not present
-
 int cube_bases[10] = {0};
 // using the vertices to create trises
 Vertex cube[24] = {
-	{{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 0 left down
-	{{1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, -1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 1 right down
-	{{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, -1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 2 right up
-	{{0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, -1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 3 left up
-	{{0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, +1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 0 left down
-	{{1.0f, 0.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, +1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 1 right down
-	{{1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, +1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 2 right up
-	{{0.0f, 1.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, +1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 3 left up
-	{{0.0f, 1.0f, 1.0f}, {1.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 0 left down
-	{{0.0f, 1.0f, 0.0f}, {1.0f, 1.0f}, {-1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 1 right down
-	{{0.0f, 0.0f, 0.0f}, {0.0f, 1.0f}, {-1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 2 right up
-	{{0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 3 left up
-	{{1.0f, 1.0f, 1.0f}, {1.0f, 0.0f}, {+1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 0 left down
-	{{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}, {+1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 1 right down
-	{{1.0f, 0.0f, 0.0f}, {0.0f, 1.0f}, {+1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 2 right up
-	{{1.0f, 0.0f, 1.0f}, {0.0f, 0.0f}, {+1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 3 left up
-	{{0.0f, 0.0f, 0.0f}, {0.0f, 1.0f}, {0.0f, -1.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 0 left down
-	{{1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, -1.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 1 right down
-	{{1.0f, 0.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, -1.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 2 right up
-	{{0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}, {0.0f, -1.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 3 left up
-	{{0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}, {0.0f, +1.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 0 left down
-	{{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, +1.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 1 right down
-	{{1.0f, 1.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, +1.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 2 right up
-	{{0.0f, 1.0f, 1.0f}, {0.0f, 0.0f}, {0.0f, +1.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}	 // 3 left up
+    {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 0 left down
+    {{1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, -1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 1 right down
+    {{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, -1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 2 right up
+    {{0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, -1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 3 left up
+    {{0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, +1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 0 left down
+    {{1.0f, 0.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, +1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 1 right down
+    {{1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, +1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 2 right up
+    {{0.0f, 1.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, +1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 3 left up
+    {{0.0f, 1.0f, 1.0f}, {1.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 0 left down
+    {{0.0f, 1.0f, 0.0f}, {1.0f, 1.0f}, {-1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 1 right down
+    {{0.0f, 0.0f, 0.0f}, {0.0f, 1.0f}, {-1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 2 right up
+    {{0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 3 left up
+    {{1.0f, 1.0f, 1.0f}, {1.0f, 0.0f}, {+1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 0 left down
+    {{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}, {+1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 1 right down
+    {{1.0f, 0.0f, 0.0f}, {0.0f, 1.0f}, {+1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 2 right up
+    {{1.0f, 0.0f, 1.0f}, {0.0f, 0.0f}, {+1.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 3 left up
+    {{0.0f, 0.0f, 0.0f}, {0.0f, 1.0f}, {0.0f, -1.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 0 left down
+    {{1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, -1.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 1 right down
+    {{1.0f, 0.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, -1.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 2 right up
+    {{0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}, {0.0f, -1.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 3 left up
+    {{0.0f, 1.0f, 0.0f}, {0.0f, 1.0f}, {0.0f, +1.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 0 left down
+    {{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, +1.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 1 right down
+    {{1.0f, 1.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, +1.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 2 right up
+    {{0.0f, 1.0f, 1.0f}, {0.0f, 0.0f}, {0.0f, +1.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}  // 3 left up
 };
 
 // the small crosshair quad
 Vertex crosshair_verts[4]{
 
-	{{-0.03f, -0.03f, -1.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 0 left down
-	{{+0.03f, -0.03f, -1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 1 right down
-	{{+0.03f, +0.03f, -1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 2 right up
-	{{-0.03f, +0.03f, -1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 3 left up
+    {{-0.03f, -0.03f, -1.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 0 left down
+    {{+0.03f, -0.03f, -1.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 1 right down
+    {{+0.03f, +0.03f, -1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 2 right up
+    {{-0.03f, +0.03f, -1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 3 left up
 };
 
 GLFWwindow *setup() {
@@ -130,7 +127,7 @@ GLFWwindow *setup() {
 // Create a windowed or fullscreen mode window and its OpenGL context
 #ifdef FULLSCREEN
 	monitor = glfwGetPrimaryMonitor();
-	window	= glfwCreateWindow(1920, 1080, "WOOOO HOOOO", monitor, NULL);
+	window  = glfwCreateWindow(1920, 1080, "WOOOO HOOOO", monitor, NULL);
 #else
 	window = glfwCreateWindow(int(screen_width), int(screen_height), "WOOOO HOOOO", NULL, NULL);
 #endif
@@ -151,7 +148,7 @@ GLFWwindow *setup() {
 	// callback for mouse positioon changed
 	glfwSetCursorPosCallback(window, mouse_callback);
 	// hide the mouse pointer and constraint it within the window
-	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	// glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// Make the window's context current, draw on this window
 	glfwMakeContextCurrent(window);
@@ -242,16 +239,16 @@ void processKeyboard() {
 
 	/*/ close windows
 	if (keys[GLFW_KEY_ESCAPE]) {
-		_Close = true;
-		return;
+	    _Close = true;
+	    return;
 	}
 	*/
 
 	// [DEBUG]: add a cube
 	/*if (keys[GLFW_KEY_K]) {
 
-		cube_Index += 4;
-		keys[GLFW_KEY_K] = 0;
+	    cube_Index += 4;
+	    keys[GLFW_KEY_K] = 0;
 	}*/
 }
 
@@ -261,14 +258,14 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 	glViewport(0, 0, width, height);
 	screen_height = float(height);
 	screen_width  = float(width);
-	proj		  = camera.getPerspective(screen_width, screen_height);
+	proj          = camera.getPerspective(screen_width, screen_height);
 }
 
 // permits multiple key pressed at once
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
 
 	keys[key] = action > 0; // _RELEASE = 0, _PRESS and _REPEAT = 1
-	keyMod	  = char(mods);
+	keyMod    = char(mods);
 }
 
 // make the camera look to the mouse
@@ -287,17 +284,17 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
 // find the intersection point between a line and a tris
 bool intersect_triangle(glm::vec3 Raydir, glm::vec3 Rayorg, glm::vec3 A, glm::vec3 B, glm::vec3 C, glm::vec3 &res) {
 
-	float	  u, v, t;
-	glm::vec3 E1	 = B - A;
-	glm::vec3 E2	 = C - A;
-	glm::vec3 N		 = glm::cross(E1, E2);
-	float	  det	 = -glm::dot(Raydir, N);
-	float	  invdet = 1.0 / det;
-	glm::vec3 AO	 = Rayorg - A;
-	glm::vec3 DAO	 = glm::cross(AO, Raydir);
-	u				 = glm::dot(E2, DAO) * invdet;
-	v				 = -glm::dot(E1, DAO) * invdet;
-	t				 = glm::dot(AO, N) * invdet;
+	float     u, v, t;
+	glm::vec3 E1     = B - A;
+	glm::vec3 E2     = C - A;
+	glm::vec3 N      = glm::cross(E1, E2);
+	float     det    = -glm::dot(Raydir, N);
+	float     invdet = 1.0 / det;
+	glm::vec3 AO     = Rayorg - A;
+	glm::vec3 DAO    = glm::cross(AO, Raydir);
+	u                = glm::dot(E2, DAO) * invdet;
+	v                = -glm::dot(E1, DAO) * invdet;
+	t                = glm::dot(AO, N) * invdet;
 	if (det >= 1e-6 && t >= 0.0 && u >= 0.0 && v >= 0.0 && (u + v) <= 1.0) {
 		res = Rayorg + (Raydir * t);
 		return true;
@@ -409,27 +406,6 @@ glm::vec3 checkMouseRay(Vertex *vertexes, unsigned int *indexes, unsigned int co
 	return min;
 }
 
-void get_block_raycast(glm::vec3 rayorg, glm::vec3 raydir, glm::vec3 &res) {
-
-	int X, Y, Z;
-	while (true) {
-
-		rayorg += raydir * 0.25f;
-
-		X = int(rayorg.x);
-		Y = int(rayorg.y);
-		Z = int(rayorg.z);
-
-		if (chunk[X][Y]) {
-			res.x = X;
-			res.y = Y;
-			res.z = Z;
-
-			return;
-		}
-	}
-}
-
 void addCube(Vertex *verticies, Renderer &renderer) {
 
 	for (int i = 0; i < 24; i += 4) {
@@ -445,18 +421,16 @@ void shift(Vertex *verticies, glm::vec3 offset, int count) {
 
 int main() {
 
-	//Instrumentor::Get().BeginSession("game");
+	// Instrumentor::Get().BeginSession("game");
 
-	//PROFILE_FUNCTION();
+	// PROFILE_FUNCTION();
 
 	// creating OpenGL context and window
 	GLFWwindow *window = setup();
 
 	// scope every gl buffer, this way they will automatically destroyed
 	{
-		//PROFILING_SCOPE("renderer and shaders");
-
-		chunk[5][5] = true;
+		// PROFILING_SCOPE("renderer and shaders");
 
 		proj = camera.getPerspective(screen_width, screen_width);
 		view = camera.point(0, -1);
@@ -468,7 +442,7 @@ int main() {
 		Game_shader.addShader("res/shaders/main.frag", GL_FRAGMENT_SHADER);
 
 		Renderer::BindShaderProgram(Game_shader.m_RendererID);
-		Game_shader.SetUniform1i("u_Texture", 0); // use the texture;
+		Game_shader.SetUniform1i("texture0", 0); // use the texture;
 
 		Texture redlamp_on("res/textures/redstone_lamp_on.png");
 
@@ -506,7 +480,7 @@ int main() {
 		// Loop until the user closes the window
 		while (!_Close) {
 
-			//PROFILING_SCOPE("active loop");
+			// PROFILING_SCOPE("active loop");
 
 			processKeyboard();
 
@@ -518,7 +492,7 @@ int main() {
 
 			{ // GAME
 
-				//PROFILING_SCOPE("Game render");
+				// PROFILING_SCOPE("Game render");
 
 				Renderer::BindShaderProgram(Game_shader.m_RendererID);
 
@@ -526,15 +500,22 @@ int main() {
 				Game_shader.SetUniformMat4f("u_MVP", MVP); // use the projection matrix
 				Game_shader.SetUniformMat4f("u_Model", model);
 				Game_shader.SetUniform3f("u_LightColor", ambientLight.r, ambientLight.g, ambientLight.b);
-				Game_shader.SetUniform3f("u_LightPos", ligthPos.x, ligthPos.y, ligthPos.z);
+				Game_shader.SetUniform3f("viewPos", ligthPos.x, ligthPos.y, ligthPos.z);
 				Game_shader.SetUniform3f("u_CameraPos", camera.m_cameraPosition.x, camera.m_cameraPosition.y, camera.m_cameraPosition.z);
 
-				for (int i = 0; i < 10; i++) {
-					for (int j = 0; j < 10; j++) {
-						if (chunk[i][j]) {
-							shift(cube, {i, j, 0}, 24);
+				Game_shader.SetUniform1f("material.shininess", 32.0f);
+
+				Game_shader.SetUniform3f("dirLight.direction", -1.0f, -0.0f, 0.0f);
+				Game_shader.SetUniform3f("dirLight.ambient", 0.2f, 0.2f, 0.2f);
+				Game_shader.SetUniform3f("dirLight.diffuse", 0.8f, 0.8f, 0.8f); // darken diffuse light a bit
+				Game_shader.SetUniform3f("dirLight.specular", 1.0f, 1.0f, 1.0f);
+
+				for (int k = 0; k < 10; ++k) {
+					for (int j = 0; j < 10; ++j) {
+						for (int i = 0; i < 10; ++i) {
+							shift(cube, {i, j, k}, 24);
 							addCube(cube, Game_renderer);
-							shift(cube, {-i, -j, 0}, 24);
+							shift(cube, {-i, -j, -k}, 24);
 						}
 					}
 				}
@@ -586,7 +567,7 @@ int main() {
 
 			{ // HUD
 
-				//PROFILING_SCOPE("HUD rendering");
+				// PROFILING_SCOPE("HUD rendering");
 
 				Renderer::BindShaderProgram(HUD_shader.m_RendererID);
 
@@ -609,7 +590,7 @@ int main() {
 		Renderer::UnBindShaderProgram();
 	}
 
-	//Instrumentor::Get().EndSession();
+	// Instrumentor::Get().EndSession();
 
 	glfwTerminate();
 	return 0;
@@ -640,6 +621,6 @@ void updateDTime() {
 
 	// framerate dependent way of measuring time
 	float currentFrame = float(glfwGetTime());
-	deltaTime		   = currentFrame - lastFrameTime;
-	lastFrameTime	   = currentFrame;
+	deltaTime          = currentFrame - lastFrameTime;
+	lastFrameTime      = currentFrame;
 }
