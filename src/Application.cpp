@@ -25,7 +25,7 @@
 
 //#define FULLSCREEN
 
-float screen_width = 1000;
+float screen_width	= 1000;
 float screen_height = 1000;
 
 void print_matrix4(glm::mat4);
@@ -94,7 +94,7 @@ int main(void) {
 // Create a windowed mode window and its OpenGL context
 #ifdef FULLSCREEN
 	GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-	window = glfwCreateWindow(1920, 1080, "WOOOO HOOOO", monitor, NULL);
+	window				 = glfwCreateWindow(1920, 1080, "WOOOO HOOOO", monitor, NULL);
 #else
 	window = glfwCreateWindow(screen_width, screen_height, "WOOOO HOOOO", NULL, NULL);
 #endif
@@ -118,6 +118,12 @@ int main(void) {
 
 	std::cout << glGetString(GL_VERSION) << std::endl;
 
+	// enabling aplha
+	//GLCall(glEnable(GL_BLEND));
+	//GLCall(glBlendFunc(GL_SRC_ALPHA, GL_SRC_ALPHA));
+	// enable depth buffer
+	GLCall(glEnable(GL_DEPTH_TEST));
+
 	{
 
 		/* 
@@ -128,63 +134,71 @@ int main(void) {
 			20.0f, 0.0f, 1.0f, 1.0f,  // 2 right up
 			0.0f, 0.0f, 0.0f, 1.0f,	  // 3 left up
 		}; */
-
+		/*
 		float pos[]{
 			-0.5f, -0.5f, 0.0f, 0.0f, // 0 left down
 			0.5f, -0.5f, 1.0f, 0.0f,  // 1 right down
 			0.5f, 0.5f, 1.0f, 1.0f,	  // 2 right up
 			-0.5f, 0.5f, 0.0f, 1.0f	  // 3 left up
-		};
+		};*/
 
-		float vertices[] = {
+		float pos[] = {
 			-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // 0 left down
 			0.5f, -0.5f, -0.5f, 1.0f, 0.0f,	 // 1 right down
 			0.5f, 0.5f, -0.5f, 1.0f, 1.0f,	 // 2 right up
 			-0.5f, 0.5f, -0.5f, 0.0f, 1.0f,	 // 3 left up
-			-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,	 // 0 left down
-			0.5f, -0.5f, 0.5f, 1.0f, 0.0f,	 // 1 right down
-			0.5f, 0.5f, 0.5f, 1.0f, 1.0f,	 // 2 right up
-			-0.5f, 0.5f, 0.5f, 0.0f, 1.0f,	 // 3 left up
+
+			-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, // 0 left down
+			0.5f, -0.5f, 0.5f, 1.0f, 0.0f,	// 1 right down
+			0.5f, 0.5f, 0.5f, 1.0f, 1.0f,	// 2 right up
+			-0.5f, 0.5f, 0.5f, 0.0f, 1.0f,	// 3 left up
+
 			-0.5f, 0.5f, 0.5f, 1.0f, 0.0f,	 // 0 left down
 			-0.5f, 0.5f, -0.5f, 1.0f, 1.0f,	 // 1 right down
 			-0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // 2 right up
 			-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,	 // 3 left up
-			0.5f, 0.5f, 0.5f, 1.0f, 0.0f,	 // 0 left down
-			0.5f, 0.5f, -0.5f, 1.0f, 1.0f,	 // 1 right down
-			0.5f, -0.5f, -0.5f, 0.0f, 1.0f,	 // 2 right up
-			0.5f, -0.5f, 0.5f, 0.0f, 0.0f,	 // 3 left up
+
+			0.5f, 0.5f, 0.5f, 1.0f, 0.0f,	// 0 left down
+			0.5f, 0.5f, -0.5f, 1.0f, 1.0f,	// 1 right down
+			0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // 2 right up
+			0.5f, -0.5f, 0.5f, 0.0f, 0.0f,	// 3 left up
+
 			-0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // 0 left down
 			0.5f, -0.5f, -0.5f, 1.0f, 1.0f,	 // 1 right down
 			0.5f, -0.5f, 0.5f, 1.0f, 0.0f,	 // 2 right up
 			-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,	 // 3 left up
-			-0.5f, 0.5f, -0.5f, 0.0f, 1.0f,	 // 0 left down
-			0.5f, 0.5f, -0.5f, 1.0f, 1.0f,	 // 1 right down
-			0.5f, 0.5f, 0.5f, 1.0f, 0.0f,	 // 2 right up
-			-0.5f, 0.5f, 0.5f, 0.0f, 0.0f,	 // 3 left up
+
+			-0.5f, 0.5f, -0.5f, 0.0f, 1.0f, // 0 left down
+			0.5f, 0.5f, -0.5f, 1.0f, 1.0f,	// 1 right down
+			0.5f, 0.5f, 0.5f, 1.0f, 0.0f,	// 2 right up
+			-0.5f, 0.5f, 0.5f, 0.0f, 0.0f,	// 3 left up
 		};
 
 		Renderer renderer;
 
-		// enabling aplha
-		GLCall(glEnable(GL_BLEND));
-		GLCall(glBlendFunc(GL_SRC_ALPHA, GL_SRC_ALPHA));
-
 		VertexArray	 va;
-		VertexBuffer vb(pos, 4 * 4 * sizeof(float));
+		VertexBuffer vb(pos, sizeof(pos)); //5 * 24 * sizeof(float));
 
 		VertexLayout layout;
 		// 2 bytes for position, 2 for texture coordinates
-		layout.Push(2, GL_FLOAT);
+		layout.Push(3, GL_FLOAT);
 		layout.Push(2, GL_FLOAT);
 		va.AddBuffer(vb, layout);
 
 		// using the vertices to create a square
-		unsigned int tr_i[6] = {0, 1, 2, 2, 3, 0};
-		IndexBuffer	 ib(tr_i, 6);
+		unsigned int tr_i[36] = {
+			0, 1, 2, 2, 3, 0,		// square one
+			4, 5, 6, 6, 7, 4,		// square two
+			8, 9, 10, 10, 11, 8,	// square three
+			12, 13, 14, 14, 15, 12, // square four
+			16, 17, 18, 18, 19, 16, // square five
+			20, 21, 22, 22, 23, 20	// square six
+		};
+		IndexBuffer ib(tr_i, 36);
 
 		proj = glm::perspective(glm::radians(55.0f), float(screen_width / screen_height), 0.1f, 100.0f);
 
-		view = glm::lookAt(glm::vec3(0.5f, 0.1f, 0.1f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		view = glm::lookAt(glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
 		MVP = proj * view * model;
 
