@@ -25,58 +25,64 @@
 
 //#define FULLSCREEN
 
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 800
+float screen_width = 1000;
+float screen_height = 1000;
 
-glm::vec2 translation(0, 0);
-glm::mat4 proj;
-glm::mat4 MVP;
-glm::mat4 view;
-glm::mat4 model;
+void print_matrix4(glm::mat4);
+void rotateModel(glm::vec3 amountDeg);
+void translateModel(glm::vec3 amout);
 
-void print_matrix(glm::mat4 matrix) {
-
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			printf("% 4.2f ", matrix[i][j]);
-		}
-		std::cout << std::endl;
-	}
-}
+glm::vec3 translation(0.0f, 0.0f, 0.0f);
+glm::vec3 rotation(0.0f, 0.0f, 0.0f);
+glm::mat4 proj(1.0f);
+glm::mat4 MVP(1.0f);
+glm::mat4 view(1.0f);
+glm::mat4 model(1.0f);
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-	if (action == GLFW_REPEAT) {
+
+	model = glm::mat4(1.0f);
+
+	if (action == GLFW_REPEAT || action == GLFW_PRESS) {
 		if (key == GLFW_KEY_RIGHT) {
-			translation.x -= 5;
+			translation.x -= 0.1;
 		} else if (key == GLFW_KEY_LEFT) {
-			translation.x += 5;
+			translation.x += 0.1;
 		}
+
 		if (key == GLFW_KEY_UP) {
-			translation.y -= 5;
+			translation.y -= 0.1;
 		} else if (key == GLFW_KEY_DOWN) {
-			translation.y += 5;
+			translation.y += 0.1;
 		}
-		view = glm::translate(glm::mat4(1.0f), glm::vec3(-translation.x, translation.y, 0));
-		MVP = proj * view;
-		// print_matrix(MVP);
+
+		translateModel(translation);
+
+		if (key == GLFW_KEY_W) {
+			rotation.x -= 1.0f;
+		} else if (key == GLFW_KEY_S) {
+			rotation.x += 1.0f;
+		}
+
+		if (key == GLFW_KEY_A) {
+			rotation.y -= 1.0f;
+		} else if (key == GLFW_KEY_D) {
+			rotation.y += 1.0f;
+		}
+
+		if (key == GLFW_KEY_R) {
+			rotation.z -= 1.0f;
+		} else if (key == GLFW_KEY_E) {
+			rotation.z += 1.0f;
+		}
+		rotateModel(rotation);
+
+		MVP = proj * view * model;
 	}
 }
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 	glViewport(0, 0, width, height);
-	proj = glm::ortho(0.0f, float(width), float(height), 0.0f, -1.0f, 1.0f);
-
-	std::cout << width << " : " << height << std::endl;
-
-	print_matrix(proj);
-
-	std::cout << std::endl;
-
-	glm::vec4 temp(300.0f, 300.0f, 0.0f, 1.0f);
-	glm::vec4 res = temp * proj;
-	for (int i = 0; i < 4; i++) {
-		printf("%5.08f\n", res[i]);
-	}
 }
 
 int main(void) {
@@ -90,20 +96,20 @@ int main(void) {
 	GLFWmonitor *monitor = glfwGetPrimaryMonitor();
 	window = glfwCreateWindow(1920, 1080, "WOOOO HOOOO", monitor, NULL);
 #else
-	window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "WOOOO HOOOO", NULL, NULL);
+	window = glfwCreateWindow(screen_width, screen_height, "WOOOO HOOOO", NULL, NULL);
 #endif
 
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetKeyCallback(window, key_callback);
 
+	// Make the window's context current
+	glfwMakeContextCurrent(window);
+	glfwSwapInterval(1);
+
 	if (!window) {
 		glfwTerminate();
 		return -1;
 	}
-
-	// Make the window's context current
-	glfwMakeContextCurrent(window);
-	glfwSwapInterval(1);
 
 	if (glewInit() != GLEW_OK) {
 		std::cout << "Error calling Glewinit";
@@ -113,13 +119,48 @@ int main(void) {
 	std::cout << glGetString(GL_VERSION) << std::endl;
 
 	{
+
+		/* 
 		float pos[] = {
 			// vertex x, vertx y, textcoor x, textcoor y
-			100.0f, 300.0f, 0.0f, 0.0f, // 0 down left
-			300.0f, 300.0f, 1.0f, 0.0f, // 1 down right
-			300.0f, 100.0f, 1.0f, 1.0f, // 2 up right
-			100.0f, 100.0f, 0.0f, 1.0f, // 3 up left
-			0.0f, 0.0f, 0.5f, 0.5f		// 4 center
+			0.0, 20.0f, 0.0f, 0.0f,	  // 0 left down
+			20.0f, 20.0f, 1.0f, 0.0f, // 1 right down
+			20.0f, 0.0f, 1.0f, 1.0f,  // 2 right up
+			0.0f, 0.0f, 0.0f, 1.0f,	  // 3 left up
+		}; */
+
+		float pos[]{
+			-0.5f, -0.5f, 0.0f, 0.0f, // 0 left down
+			0.5f, -0.5f, 1.0f, 0.0f,  // 1 right down
+			0.5f, 0.5f, 1.0f, 1.0f,	  // 2 right up
+			-0.5f, 0.5f, 0.0f, 1.0f	  // 3 left up
+		};
+
+		float vertices[] = {
+			-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // 0 left down
+			0.5f, -0.5f, -0.5f, 1.0f, 0.0f,	 // 1 right down
+			0.5f, 0.5f, -0.5f, 1.0f, 1.0f,	 // 2 right up
+			-0.5f, 0.5f, -0.5f, 0.0f, 1.0f,	 // 3 left up
+			-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,	 // 0 left down
+			0.5f, -0.5f, 0.5f, 1.0f, 0.0f,	 // 1 right down
+			0.5f, 0.5f, 0.5f, 1.0f, 1.0f,	 // 2 right up
+			-0.5f, 0.5f, 0.5f, 0.0f, 1.0f,	 // 3 left up
+			-0.5f, 0.5f, 0.5f, 1.0f, 0.0f,	 // 0 left down
+			-0.5f, 0.5f, -0.5f, 1.0f, 1.0f,	 // 1 right down
+			-0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // 2 right up
+			-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,	 // 3 left up
+			0.5f, 0.5f, 0.5f, 1.0f, 0.0f,	 // 0 left down
+			0.5f, 0.5f, -0.5f, 1.0f, 1.0f,	 // 1 right down
+			0.5f, -0.5f, -0.5f, 0.0f, 1.0f,	 // 2 right up
+			0.5f, -0.5f, 0.5f, 0.0f, 0.0f,	 // 3 left up
+			-0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // 0 left down
+			0.5f, -0.5f, -0.5f, 1.0f, 1.0f,	 // 1 right down
+			0.5f, -0.5f, 0.5f, 1.0f, 0.0f,	 // 2 right up
+			-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,	 // 3 left up
+			-0.5f, 0.5f, -0.5f, 0.0f, 1.0f,	 // 0 left down
+			0.5f, 0.5f, -0.5f, 1.0f, 1.0f,	 // 1 right down
+			0.5f, 0.5f, 0.5f, 1.0f, 0.0f,	 // 2 right up
+			-0.5f, 0.5f, 0.5f, 0.0f, 0.0f,	 // 3 left up
 		};
 
 		Renderer renderer;
@@ -129,7 +170,7 @@ int main(void) {
 		GLCall(glBlendFunc(GL_SRC_ALPHA, GL_SRC_ALPHA));
 
 		VertexArray	 va;
-		VertexBuffer vb(pos, 5 * 4 * sizeof(float));
+		VertexBuffer vb(pos, 4 * 4 * sizeof(float));
 
 		VertexLayout layout;
 		// 2 bytes for position, 2 for texture coordinates
@@ -141,10 +182,11 @@ int main(void) {
 		unsigned int tr_i[6] = {0, 1, 2, 2, 3, 0};
 		IndexBuffer	 ib(tr_i, 6);
 
-		proj = glm::ortho(0.0f, float(SCREEN_WIDTH), float(SCREEN_HEIGHT), 0.0f, -1.0f, 1.0f);
-		view = glm::translate(glm::mat4(1.0f), glm::vec3(translation.x, translation.y, 0));
+		proj = glm::perspective(glm::radians(55.0f), float(screen_width / screen_height), 0.1f, 100.0f);
 
-		MVP = proj * view;
+		view = glm::lookAt(glm::vec3(0.5f, 0.1f, 0.1f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		MVP = proj * view * model;
 
 		Shader shade;
 		shade.addShader("res/shaders/basic.frag", GL_FRAGMENT_SHADER);
@@ -189,3 +231,45 @@ int main(void) {
 	glfwTerminate();
 	return 0;
 }
+
+// for debug, print the matrix on console
+void print_matrix4(glm::mat4 matrix) {
+
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			printf("% 4.8f ", matrix[i][j]);
+		}
+		std::cout << std::endl;
+	}
+}
+
+void translateModel(glm::vec3 amount) {
+	model = glm::translate(model, glm::vec3(amount.x, amount.y, amount.z));
+}
+
+void rotateModel(glm::vec3 amountDeg) {
+	model = glm::rotate(model, glm::radians(amountDeg.x), glm::vec3(1.0f, 0.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(amountDeg.y), glm::vec3(0.0f, 1.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(amountDeg.z), glm::vec3(0.0f, 0.0f, 1.0f));
+}
+
+//          1.0
+//           │
+//           │
+//-1.0 ──────┼──────1.0
+//           │
+//           │
+//         -1.0
+//
+//      │
+//      V
+//proj = glm::ortho(0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f); // set the drawing screen from top left
+
+//      │
+// 0.0  V
+//  ┌──────1.0
+//  │
+//  │
+// 1.0
+
+//proj = glm::perspective(glm::radians(45.0f), float(SCREEN_WIDTH / SCREEN_HEIGHT), 0.1f, 100.0f);
