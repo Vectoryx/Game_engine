@@ -1,5 +1,7 @@
-#include "Camera.h"
+#include "Camera.hpp"
+#include <iostream>
 
+// create the camera from a position
 Camera::Camera(glm::vec3 pos) {
 	m_cameraPosition = pos;
 	m_cameraRight	 = glm::vec3(1.0f, 0.0f, 0.0f);
@@ -8,6 +10,7 @@ Camera::Camera(glm::vec3 pos) {
 	m_cameraWatching = glm::vec3(0.0f, 0.0f, -1.0f);
 }
 
+// move the camera by an offset and return the view matrix
 glm::mat4 Camera::move(glm::vec3 offset) {
 
 	m_cameraPosition += offset;
@@ -16,10 +19,12 @@ glm::mat4 Camera::move(glm::vec3 offset) {
 	return glm::lookAt(m_cameraPosition, m_cameraPosition + m_cameraWatching, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
+// return the perspective projection matrix
 glm::mat4 Camera::getPerspective(int width, int height) {
 	return glm::perspective(glm::radians(m_FOV), float(width / height), 0.1f, 100.0f);
 }
 
+// get the view matrix from mouse coordinate
 glm::mat4 Camera::point(int posx, int posy) {
 
 	float sensitivity = 0.1f;
@@ -48,6 +53,7 @@ glm::vec3 Camera::getRightSpeed() {
 	return m_cameraRight * m_cameraSpeedConst;
 }
 
+// update FOV
 void Camera::zoom(float diff_FOV) {
 	m_FOV = glm::clamp(m_FOV + diff_FOV, 10.0f, 110.0f);
 }

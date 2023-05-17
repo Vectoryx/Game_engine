@@ -2,8 +2,10 @@
 * Docs: https://docs.gl
 */
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include "GL/glew.h"
+#include "GLFW/glfw3.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -11,27 +13,24 @@
 #include <stdio.h>
 #include <string>
 
-#include "Camera.h"
-#include "Debugging.h"
-#include "IndexBuffer.h"
-#include "Shader.h"
-#include "Texture.h"
-#include "VertexArray.h"
-#include "VertexBuffer.h"
-#include "renderer.h"
-
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
+#include "Camera.hpp"
+#include "Debugging.hpp"
+#include "IndexBuffer.hpp"
+#include "Renderer.hpp"
+#include "Shader.hpp"
+#include "Texture.hpp"
+#include "VertexArray.hpp"
+#include "VertexBuffer.hpp"
 
 //#define FULLSCREEN
 
 float screen_width	= 1000;
 float screen_height = 1000;
+bool  _Close		= false;
 
 void printMat4(glm::mat4 mat);
 void rotateMat4(glm::mat4 &matrix, glm::vec3 amountDeg);
 void translateMat4(glm::mat4 &matrix, glm::vec3 amout);
-
 void updateDTime();
 
 // MVP rojections
@@ -41,8 +40,9 @@ glm::mat4 model(1.0f);
 glm::mat4 MVP(1.0f);
 
 // camera object
-Camera camera(glm::vec3(2.0f, 0.5f, 0.0f));
+Camera camera(glm::vec3(0.0f, 0.5f, 2.0f));
 
+// variable for calculating cameraposition and speed
 float	  deltaTime		= 0.0f; // time elapsed since last frame
 float	  lastFrameTime = 0.0f; // last absolute frametime
 glm::vec2 mouse(-1.0f, -1.0f);
@@ -51,27 +51,31 @@ glm::vec2 mouse(-1.0f, -1.0f);
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
 
 	glm::vec3 translation(0.0f, 0.0f, 0.0f);
-	glm::vec3 rotation(0.0f, 0.0f, 0.0f);
 
-	model = glm::mat4(1.0f);
+	// not using it now
+	// model = glm::mat4(1.0f);
 
 	if (action == GLFW_REPEAT || action == GLFW_PRESS) {
 
 		// camera controls
-		if (key == GLFW_KEY_A) {
-			translation += camera.getRightSpeed() * -deltaTime;
-		} else if (key == GLFW_KEY_D) {
-			translation += camera.getRightSpeed() * deltaTime;
-		}
-
+		// Foreward and Backward
 		if (key == GLFW_KEY_W) {
 			translation += camera.getFrontSpeed() * deltaTime;
 		} else if (key == GLFW_KEY_S) {
 			translation += camera.getFrontSpeed() * -deltaTime;
 		}
 
+		// Left and Right
+		if (key == GLFW_KEY_A) {
+			translation += camera.getRightSpeed() * -deltaTime;
+		} else if (key == GLFW_KEY_D) {
+			translation += camera.getRightSpeed() * deltaTime;
+		}
+
+		// and apply the movement
 		view = camera.move(translation);
 
+		// Zoom
 		if (key == GLFW_KEY_C) {
 			camera.zoom(-1);
 			proj = camera.getPerspective(screen_width, screen_height);
@@ -80,26 +84,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 			proj = camera.getPerspective(screen_width, screen_height);
 		}
 
-		// rotation control
-		if (key == GLFW_KEY_UP) {
-			rotation.x -= 1.0f;
-		} else if (key == GLFW_KEY_DOWN) {
-			rotation.x += 1.0f;
-		}
-
-		if (key == GLFW_KEY_LEFT) {
-			rotation.y -= 1.0f;
-		} else if (key == GLFW_KEY_RIGHT) {
-			rotation.y += 1.0f;
-		}
-
-		if (key == GLFW_KEY_PERIOD) {
-			rotation.z -= 1.0f;
-		} else if (key == GLFW_KEY_COMMA) {
-			rotation.z += 1.0f;
-		}
-		//rotateMat4(model, rotation);
-
+		// close windows
 		if (key == GLFW_KEY_ESCAPE) {
 			glfwTerminate();
 			exit(0);
@@ -107,7 +92,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 	}
 }
 
-// recalculate the perspective matrix from the new screen size and update the drawing "canvas"
+// recalculate the perspective matrix from the new screen size and update the drawing viewport
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 	glViewport(0, 0, width, height);
 	screen_height = height;
@@ -128,13 +113,15 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
 	mouse = glm::vec2(xpos, ypos);
 }
 
-int main(void) {
+int main() {
+
 	GLFWwindow *window;
+
 	// Initialize the library
 	if (!glfwInit())
 		return -1;
 
-// Create a windowed mode window and its OpenGL context
+// Create a windowed or fullscreen mode window and its OpenGL context
 #ifdef FULLSCREEN
 	GLFWmonitor *monitor = glfwGetPrimaryMonitor();
 	window				 = glfwCreateWindow(1920, 1080, "WOOOO HOOOO", monitor, NULL);
@@ -142,35 +129,44 @@ int main(void) {
 	window = glfwCreateWindow(screen_width, screen_height, "WOOOO HOOOO", NULL, NULL);
 #endif
 
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	glfwSetKeyCallback(window, key_callback);
-	glfwSetCursorPosCallback(window, mouse_callback);
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-	// Make the window's context current
-	glfwMakeContextCurrent(window);
-	glfwSwapInterval(1);
-
+	// if window creation failed stop everything
 	if (!window) {
 		glfwTerminate();
 		return -1;
 	}
 
+	// callback for window resize
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	// callback for key pressed
+	glfwSetKeyCallback(window, key_callback);
+	// callback for mouse positioon changed
+	glfwSetCursorPosCallback(window, mouse_callback);
+	// hide the mouse pointer and constrint it within the window
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+	// Make the window's context current, draw on this window
+	glfwMakeContextCurrent(window);
+
+	// set the swap interval as the v-sync
+	glfwSwapInterval(1);
+
+	// initializiong Glew
 	if (glewInit() != GLEW_OK) {
 		std::cout << "Error calling Glewinit";
-		return -1;
 	}
 
 	std::cout << glGetString(GL_VERSION) << std::endl;
 
 	// enabling aplha
-	//GLCall(glEnable(GL_BLEND));
-	//GLCall(glBlendFunc(GL_SRC_ALPHA, GL_SRC_ALPHA));
+	GLCall(glEnable(GL_BLEND));
+	GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 	// enable depth buffer
 	GLCall(glEnable(GL_DEPTH_TEST));
 
+	// scope every gl buffer, this way they will automatically destroyed
 	{
 
+		// a cube
 		float pos[] = {
 			-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // 0 left down
 			0.5f, -0.5f, -0.5f, 1.0f, 0.0f,	 // 1 right down
@@ -203,6 +199,7 @@ int main(void) {
 			-0.5f, 0.5f, 0.5f, 0.0f, 0.0f,	// 3 left up
 		};
 
+		// take care of bind/unbinding and drawing
 		Renderer renderer;
 
 		VertexArray	 va;
@@ -242,32 +239,38 @@ int main(void) {
 		Renderer::UnBindIndexBuffer();
 		Renderer::UnBindShaderProgram();
 
+		// bind the used stuff
 		Renderer::BindTexture(texture, 0);
 		Renderer::BindVertexArray(va);
 		Renderer::BindIndexBuffer(ib);
+		Renderer::BindShaderProgram(shade);
 
 		// Main game loop
 		// Loop until the user closes the window
 		while (!glfwWindowShouldClose(window)) {
 
+			// update delta time for camera movement
 			updateDTime();
 
 			// Render here
 			renderer.Clear();
 
-			Renderer::BindShaderProgram(shade);
 			MVP = proj * view * model;
 			shade.SetUniformMat4f("u_MVP", MVP); // use the projection matrix
 
 			renderer.Draw(va, ib, shade);
 
 			// Swap front and back buffers
+			// show front buffer, work on back buffer
 			glfwSwapBuffers(window);
 
 			// Poll for and process events
 			glfwPollEvents();
 		}
 
+		Renderer::UnBindVertexArray();
+		Renderer::UnBindVertexBuffer();
+		Renderer::UnBindIndexBuffer();
 		Renderer::UnBindShaderProgram();
 	}
 	glfwTerminate();

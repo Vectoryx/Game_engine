@@ -1,10 +1,10 @@
 #pragma once
 
 #include <GL/glew.h>
-#include "VertexArray.h"
-#include "IndexBuffer.h"
-#include "Texture.h"
-#include "Shader.h"
+#include "VertexArray.hpp"
+#include "IndexBuffer.hpp"
+#include "Texture.hpp"
+#include "Shader.hpp"
 
 class Renderer {
 public:
