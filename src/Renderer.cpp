@@ -1,4 +1,5 @@
 #include "Renderer.hpp"
+
 #include "Debugging.hpp"
 #include "Logger.hpp"
 #include "profiler.hpp"
@@ -14,15 +15,15 @@ Renderer::Renderer() {
 
 	Current_batch.VertBuffer = new Vertex[MAX_VERTEX_COUNT];
 	Current_batch.IndxBuffer = new unsigned int[MAX_VERTEX_COUNT];
-	Current_batch.nextVert	 = Current_batch.VertBuffer;
+	Current_batch.nextVert   = Current_batch.VertBuffer;
 
 	// create the necessary buffers
-	Current_batch.GLVertexArray	 = VertexArray::createBuffer();
+	Current_batch.GLVertexArray  = VertexArray::createBuffer();
 	Current_batch.GLVertexBuffer = VertexBuffer::createBuffer(sizeof(Vertex) * MAX_VERTEX_COUNT);
-	Current_batch.GLIndexBuffer	 = IndexBuffer::createBuffer(MAX_VERTEX_COUNT);
+	Current_batch.GLIndexBuffer  = IndexBuffer::createBuffer(MAX_VERTEX_COUNT);
 
 	Current_batch.indexCount = 0;
-	Current_batch.indexVal	 = 0;
+	Current_batch.indexVal   = 0;
 
 	// apply the Vertex attributes to correct Array and buffer
 	VertexArray::AddBuffer(Current_batch.GLVertexArray, Current_batch.GLVertexBuffer);
@@ -77,7 +78,7 @@ void Renderer::DrawTris(Vertex &v1, Vertex &v2, Vertex &v3) {
 void Renderer::DrawQuad(Vertex &v1, Vertex &v2, Vertex &v3, Vertex &v4) {
 
 	if (Current_batch.indexCount + 6 > MAX_VERTEX_COUNT) {
-		//Logger::Log(Logger::Info, "Max vertex count exceeded, committing drawing call");
+		// Logger::Log(Logger::Info, "Max vertex count exceeded, committing drawing call");
 		Commit();
 	}
 
@@ -119,9 +120,9 @@ void Renderer::Commit() {
 	GLCall(glDrawElements(GL_TRIANGLES, Current_batch.indexCount, GL_UNSIGNED_INT, nullptr));
 
 	// reset the position I'm writing to
-	Current_batch.nextVert	 = Current_batch.VertBuffer;
+	Current_batch.nextVert   = Current_batch.VertBuffer;
 	Current_batch.indexCount = 0;
-	Current_batch.indexVal	 = 0;
+	Current_batch.indexVal   = 0;
 }
 
 void Renderer::BindIndexBuffer(const unsigned int &IBuffer) {

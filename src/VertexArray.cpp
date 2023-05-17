@@ -1,4 +1,5 @@
 #include "VertexArray.hpp"
+
 #include "Renderer.hpp"
 
 // create a Vertex array on the GPU, but no data

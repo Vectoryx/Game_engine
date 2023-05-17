@@ -1,10 +1,11 @@
+#include "Shader.hpp"
+
+#include "Renderer.hpp"
+
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
-
-#include "Renderer.hpp"
-#include "Shader.hpp"
 
 // generate a shader program, a program will include multiple shaders
 Shader::Shader() {
@@ -18,8 +19,8 @@ Shader::~Shader() {
 // compile a shader and print compilation error
 unsigned int Shader::CompileShader(unsigned int type, const std::string &source) {
 	// create the vertex shader
-	unsigned int id	 = glCreateShader(type);
-	const char * src = source.c_str();
+	unsigned int id  = glCreateShader(type);
+	const char  *src = source.c_str();
 
 	// upload the shader code to the GPU
 	GLCall(glShaderSource(id, 1, &src, nullptr));
@@ -43,7 +44,7 @@ unsigned int Shader::CompileShader(unsigned int type, const std::string &source)
 
 		// print the compilation error
 		std::cout << "[Shader]: Error: failed to compile " << (type == GL_VERTEX_SHADER ? "vertex" : "fragment") << " shader"
-				  << "\n";
+		          << "\n";
 		std::cout << message << "\n";
 		glDeleteShader(id);
 		return -1;

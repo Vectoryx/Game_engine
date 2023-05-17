@@ -1,5 +1,6 @@
 #include "Debugging.hpp"
-#include "glew/include/GL/glew.h"
+
+#include <GL/glew.h>
 #include <iostream>
 
 // clear any remaining error

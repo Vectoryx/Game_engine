@@ -1,15 +1,15 @@
 #pragma once
 
-#include <string>
-#include <unordered_map>
-
 #include "Debugging.hpp"
 #include "glm/glm.hpp"
+
+#include <string>
+#include <unordered_map>
 
 class Shader {
 public:
 	// the unique ID of the buffer
-	unsigned int						 m_RendererID;
+	unsigned int                         m_RendererID;
 	std::unordered_map<std::string, int> m_UniformLocationCache;
 
 	Shader();
@@ -27,5 +27,5 @@ public:
 
 private:
 	unsigned int CompileShader(unsigned int type, const std::string &source);
-	int			 GetUniformLocation(const std::string &name);
+	int          GetUniformLocation(const std::string &name);
 };

@@ -1,4 +1,5 @@
 #include "VertexBuffer.hpp"
+
 #include "Renderer.hpp"
 
 // create a vertex buffer on the GPU

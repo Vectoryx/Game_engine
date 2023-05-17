@@ -1,6 +1,8 @@
 #include "IndexBuffer.hpp"
+
 #include "Debugging.hpp"
-#include "glew/include/GL/glew.h"
+
+#include <GL/glew.h>
 
 // create the index buffer and fill
 unsigned int IndexBuffer::createBuffer(int count) {

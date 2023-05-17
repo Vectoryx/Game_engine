@@ -8,13 +8,12 @@
 #include "Renderer.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
-#include "glew/include/GL/glew.h"
-#include "glfw/include/GLFW/glfw3.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
 #include "profiler.hpp"
 
+#include <GLFW/glfw3.h>
 #include <fstream>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include <sstream>
 #include <stdio.h>
@@ -72,7 +71,7 @@ glm::vec3 ligthPos(2.0f, 2.0f, 2.0f);
 
 int cube_bases[10] = {0};
 // using the vertices to create trises
-Vertex cube[24] = {
+Vertex cube[24]    = {
     {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 0 left down
     {{1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, -1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 1 right down
     {{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, -1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f}, // 2 right up
@@ -237,12 +236,11 @@ void processKeyboard() {
 		ambientLight.b += change;
 	}
 
-	/*/ close windows
+	// close windows
 	if (keys[GLFW_KEY_ESCAPE]) {
-	    _Close = true;
-	    return;
+		_Close = true;
+		return;
 	}
-	*/
 
 	// [DEBUG]: add a cube
 	/*if (keys[GLFW_KEY_K]) {

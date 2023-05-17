@@ -3,12 +3,14 @@
 
 class Logger {
 public:
-	enum Levels { Info = 0,
-				  Warning,
-				  Error };
+	enum Levels {
+		Info = 0,
+		Warning,
+		Error
+	};
 
 	// remove constructor and copy constructor
-	Logger()			   = delete;
+	Logger()               = delete;
 	Logger(Logger &logger) = delete;
 
 	static void Log(enum Levels level, const char *message) {

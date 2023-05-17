@@ -10,11 +10,11 @@
 	"directories": {
 		"project_dir": ".",
 		"exe_path_name": "bin/Game.bin",
-		"includeDir": [
+		"include_dirs": [
 			"include",
-			"ext"
+			"ext/include"
 		],
-		"sourceDir": [
+		"source_dirs": [
 			"src"
 		],
 		"temp_dir": "obj"
@@ -24,10 +24,11 @@
 		"compiler_args": "-g3 -std=c++2a -Wno-missing-field-initializers -Wconversion -Wshadow -Wextra -Wpedantic -fsanitize=address -fsanitize=pointer-compare -fsanitize=pointer-subtract -fsanitize=leak",
 		"linker_args": "-fsanitize=address -fsanitize=pointer-compare -fsanitize=pointer-subtract -fsanitize=leak",
 		"libraries_dirs" : [
+			"ext/lib"
 		],
 		"libraries_names": [
 			"GLEW",
-			"glfw3",
+			"glfw",
 			"pthread",
 			"dl",
 			"GL",

@@ -1,12 +1,13 @@
 #include "Camera.hpp"
+
 #include <iostream>
 
 // create the camera from a position
 Camera::Camera(glm::vec3 pos) {
 	m_cameraPosition = pos;
-	m_cameraRight	 = glm::vec3(1.0f, 0.0f, 0.0f);
-	m_cameraUp		 = glm::vec3(0.0f, 1.0f, 0.0f);
-	m_cameraFront	 = glm::vec3(0.0f, 0.0f, 1.0f);
+	m_cameraRight    = glm::vec3(1.0f, 0.0f, 0.0f);
+	m_cameraUp       = glm::vec3(0.0f, 1.0f, 0.0f);
+	m_cameraFront    = glm::vec3(0.0f, 0.0f, 1.0f);
 	m_cameraWatching = glm::vec3(0.0f, 0.0f, -1.0f);
 }
 
@@ -42,7 +43,7 @@ glm::mat4 Camera::point(float posx, float posy) {
 	m_cameraFront.x = float(cos(glm::radians(m_yaw)));
 	m_cameraFront.y = 0.0f;
 	m_cameraFront.z = float(sin(glm::radians(m_yaw)));
-	m_cameraFront	= glm::normalize(m_cameraFront);
+	m_cameraFront   = glm::normalize(m_cameraFront);
 
 	m_cameraRight = glm::cross(m_cameraFront, m_cameraUp);
 

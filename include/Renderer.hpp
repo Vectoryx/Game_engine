@@ -1,11 +1,11 @@
 #pragma once
-
 #include "IndexBuffer.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
 #include "VertexArray.hpp"
-#include "glew/include/GL/glew.h"
-#include "glm/glm.hpp"
+
+#include <GL/glew.h>
+#include <glm/glm.hpp>
 
 #define MAX_VERTEX_COUNT 10240 // 10 * 2^10 = 10K
 
@@ -16,7 +16,7 @@ struct Vertex {
 	glm::vec2 Tex_coord;
 	glm::vec3 Normal;
 	glm::vec4 Color;
-	float	  Tex_ID;
+	float     Tex_ID;
 
 	void data(float *vertex_buffer);
 };
@@ -27,7 +27,7 @@ struct Batch { // represent the stuff that must be drawn
 
 	unsigned int GLVertexBuffer, GLVertexArray, GLIndexBuffer = 0;
 
-	unsigned int* IndxBuffer;
+	unsigned int *IndxBuffer;
 
 	// how many index are used and the latest index number used
 	int indexCount, indexVal;

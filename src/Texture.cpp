@@ -1,12 +1,13 @@
 #include "Texture.hpp"
+
 #include "Debugging.hpp"
 #include "stb_image/stb_image.h"
 
 // load a texture to the GPU
 Texture::Texture(const std::string &path)
-	: m_RendererID(0), m_FilePath(path), m_LocalBuffer(nullptr),
-	  m_Height(0), m_Width(0), m_BPP(0) {
-	
+    : m_RendererID(0), m_FilePath(path), m_LocalBuffer(nullptr),
+      m_Height(0), m_Width(0), m_BPP(0) {
+
 	// openGL reads images from down to top, so we load the image flipped
 	stbi_set_flip_vertically_on_load(1);
 	m_LocalBuffer = stbi_load(path.c_str(), &m_Width, &m_Height, &m_BPP, 4);
